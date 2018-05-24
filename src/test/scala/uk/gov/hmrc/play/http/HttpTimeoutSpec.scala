@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,17 +23,19 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import org.webbitserver.handler.{DelayedHttpHandler, StringHttpHandler}
 import org.webbitserver.netty.NettyWebServer
-import play.api.Play
-import play.api.test.FakeApplication
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.libs.ws.WSClient
+import play.api.test.WsTestClient
+import play.api.{Configuration, Play}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.ws.WSHttp
 import uk.gov.hmrc.play.test.TestHttpCore
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext.global
 
 class HttpTimeoutSpec extends WordSpecLike with Matchers with ScalaFutures with BeforeAndAfterAll {
 
-  lazy val fakeApplication = FakeApplication(additionalConfiguration = Map("ws.timeout.request" -> "1000"))
+  lazy val fakeApplication = GuiceApplicationBuilder(configuration = Configuration("play.ws.timeout.request" -> "1000ms")).build()
 
   override def beforeAll() {
     super.beforeAll()
@@ -45,41 +47,45 @@ class HttpTimeoutSpec extends WordSpecLike with Matchers with ScalaFutures with 
     Play.stop(fakeApplication)
   }
 
+  WsTestClient.withClient(client => {
 
-  "HttpCalls" should {
+    "HttpCalls" should {
 
-    "be gracefully timeout when no response is received within the 'timeout' frame" in {
-      val http = new WSHttp with TestHttpCore
-
-      // get an unused port
-      val ss = new ServerSocket(0)
-      ss.close()
-      val publicUri = URI.create(s"http://localhost:${ss.getLocalPort}")
-      val ws = new NettyWebServer(global, ss.getLocalSocketAddress, publicUri)
-      try {
-        //starts web server
-        ws.add("/test", new DelayedHttpHandler(global, 2000, new StringHttpHandler("application/json", "{name:'pong'}")))
-        ws.start().get()
-        
-        implicit val hc = HeaderCarrier()
-        
-        val start= System.currentTimeMillis()
-        intercept[TimeoutException] {
-          //make request to web server
-          import uk.gov.hmrc.play.test.Concurrent.await
-          await(http.doPost(s"$publicUri/test", "{name:'ping'}", Seq()))
+      "be gracefully timeout when no response is received within the 'timeout' frame" in {
+        val http = new WSHttp with TestHttpCore {
+          override val configuration = Some(fakeApplication.configuration.underlying)
+          override val wsClient = fakeApplication.injector.instanceOf[WSClient]
         }
-        val diff  = (System.currentTimeMillis() - start).toInt
-        // there is test execution delay around 700ms
-        diff should be >= 1000
-        diff should be < 2500
 
-      } finally {
-        ws.stop()
+        // get an unused port
+        val ss = new ServerSocket(0)
+        ss.close()
+        val publicUri = URI.create(s"http://localhost:${ss.getLocalPort}")
+        val ws = new NettyWebServer(global, ss.getLocalSocketAddress, publicUri)
+        try {
+          //starts web server
+          ws.add("/test", new DelayedHttpHandler(global, 2000, new StringHttpHandler("application/json", "{name:'pong'}")))
+          ws.start().get()
+
+          implicit val hc = HeaderCarrier()
+
+          val start = System.currentTimeMillis()
+          intercept[TimeoutException] {
+            //make request to web server
+            import uk.gov.hmrc.play.test.Concurrent.await
+            await(http.doPost(s"$publicUri/test", "{name:'ping'}", Seq()))
+          }
+          val diff = (System.currentTimeMillis() - start).toInt
+          // there is test execution delay around 700ms
+          diff should be >= 1000
+          diff should be < 2500
+
+        } finally {
+          ws.stop()
+        }
+
       }
 
     }
-
-  }
-
+  })
 }

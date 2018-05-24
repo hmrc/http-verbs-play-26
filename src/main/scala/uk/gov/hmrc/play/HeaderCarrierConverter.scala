@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import uk.gov.hmrc.http.logging._
 import scala.util.Try
 
 object HeaderCarrierConverter {
-
 
   def fromHeadersAndSession(headers: Headers, session: Option[Session] = None) = {
     lazy val cookies: Cookies = Cookies.fromCookieHeader(headers.get(play.api.http.HeaderNames.COOKIE))

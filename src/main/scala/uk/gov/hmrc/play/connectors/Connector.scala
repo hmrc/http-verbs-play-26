@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,23 +16,14 @@
 
 package uk.gov.hmrc.play.connectors
 
-import play.api.libs.ws.{WS, WSRequest}
+import play.api.libs.ws.{WSClient, WSRequest}
 import uk.gov.hmrc.http.HeaderCarrier
 
 trait RequestBuilder {
   def buildRequest(url: String)(implicit hc: HeaderCarrier): WSRequest
 }
 
-trait PlayWSRequestBuilder extends RequestBuilder {
-
-  import play.api.Play.current
-  def buildRequest(url: String)(implicit hc: HeaderCarrier): WSRequest = WS.url(url).withHeaders(hc.headers: _*)
-}
-
 trait WSClientRequestBuilder extends RequestBuilder {
-  this: WSClientProvider =>
+  def client: WSClient
   def buildRequest(url: String)(implicit hc: HeaderCarrier): WSRequest = client.url(url).withHeaders(hc.headers: _*)
 }
-
-@deprecated("Please use PlayWSRequestBuilder instead", "3.1.0")
-trait Connector extends PlayWSRequestBuilder

@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,22 @@
 
 package uk.gov.hmrc.play.connectors
 
+import org.scalatest.mock.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
-import play.api.test.FakeApplication
-import play.api.test.Helpers._
+import play.api.libs.ws.WSClient
+import play.api.test.WsTestClient
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.{Authorization, ForwardedFor, RequestId, SessionId}
 
-class ConnectorSpec extends WordSpecLike with Matchers {
-  class TestConfig(val builderName: String, val builder: RequestBuilder, setupFunc:((=> Any) => Any)) {
-    def setup(f: => Any) = setupFunc(f)
-  }
+class ConnectorSpec extends WordSpecLike with Matchers with MockitoSugar {
+  WsTestClient.withClient(wsClient => {
 
-  val withFakeApp: ( => Any) => Any = running(FakeApplication())
-  def withoutFakeApp(f: => Any) = f
+    "AuthConnector.buildRequest" should {
+      val builder = new WSClientRequestBuilder {
+        val client = wsClient
+      }
 
-  val permutations = Seq(new TestConfig("Deprecated Connector", new Connector{}, withFakeApp),
-                         new TestConfig("PlayWS Request Builder", new PlayWSRequestBuilder {}, withFakeApp),
-    new TestConfig("WSClient Request Builder", new WSClientRequestBuilder with DefaultWSClientProvider {}, withoutFakeApp))
-
-  "AuthConnector.buildRequest" should {
-    permutations.foreach { p =>
-      s"add expected headers to the request using the ${p.builderName}" in p.setup {
+      s"add expected headers to the request" in {
         val testAuthorisation = Authorization("someauth")
         val forwarded = ForwardedFor("forwarded")
         val token = Token("token")
@@ -53,7 +48,7 @@ class ConnectorSpec extends WordSpecLike with Matchers {
           deviceID = Some(deviceID)
         )
 
-        val request = p.builder.buildRequest("authBase")(carrier)
+        val request = builder.buildRequest("http://auth.base")(carrier)
         request.headers.get(HeaderNames.authorisation).flatMap(_.headOption) shouldBe Some(testAuthorisation.value)
         request.headers.get(HeaderNames.xForwardedFor).flatMap(_.headOption) shouldBe Some(forwarded.value)
         request.headers.get(HeaderNames.token).flatMap(_.headOption) shouldBe Some(token.value)
@@ -62,5 +57,5 @@ class ConnectorSpec extends WordSpecLike with Matchers {
         request.headers.get(HeaderNames.deviceID).flatMap(_.headOption) shouldBe Some(deviceID)
       }
     }
-  }
+  })
 }

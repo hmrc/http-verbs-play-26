@@ -27,9 +27,9 @@ object HmrcBuild extends Build {
   lazy val microservice = Project(appName, file("."))
     .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning)
     .settings(
-      scalaVersion := "2.11.7",
+      scalaVersion := "2.12.4",
       libraryDependencies ++= AppDependencies(),
-      crossScalaVersions := Seq("2.11.7"),
+      crossScalaVersions := Seq("2.12.4"),
       resolvers := Seq(
         Resolver.bintrayRepo("hmrc", "releases"),
         "typesafe-releases" at "http://repo.typesafe.com/typesafe/releases/"
@@ -43,36 +43,31 @@ private object AppDependencies {
   import play.sbt.PlayImport._
   import play.core.PlayVersion
 
-//  private val playVersion = "2.5.15"
-
   val compile = Seq(
     "com.typesafe.play" %% "play" % PlayVersion.current,
     ws,
-    "uk.gov.hmrc" %% "time" % "2.0.0",
-    "uk.gov.hmrc" %% "http-core" % "0.5.0"
+    "uk.gov.hmrc" %% "time" % "3.1.0-0-g0000000",
+    "uk.gov.hmrc" %% "http-core" % "0.6.0-1-gbbc583c"
   )
-
 
   trait TestDependencies {
     lazy val scope: String = "test"
     lazy val test: Seq[ModuleID] = ???
   }
 
-
-
   object Test {
     def apply() = new TestDependencies {
       override lazy val test = Seq(
-        "com.typesafe.play" % "play-test_2.11" %  PlayVersion.current % scope,
-        "com.typesafe.play" % "play-specs2_2.11" %  PlayVersion.current % scope,
+        "com.typesafe.play" %% "play-test" %  PlayVersion.current % scope,
+        "com.typesafe.play" %% "play-specs2" %  PlayVersion.current % scope,
         "commons-codec" % "commons-codec" % "1.7" % scope,
-        "org.scalatest" %% "scalatest" % "2.2.4" % scope,
-        "org.scalacheck" %% "scalacheck" % "1.12.2" % scope,
+        "org.scalatest" %% "scalatest" % "3.0.4" % scope,
+        "org.scalacheck" %% "scalacheck" % "1.12.6" % scope,
         "org.pegdown" % "pegdown" % "1.5.0" % scope,
         "com.github.tomakehurst" % "wiremock" % "1.52" % scope,
-        "uk.gov.hmrc" %% "http-verbs-test" % "1.1.0" % scope,
         "ch.qos.logback" % "logback-core" % "1.1.7",
-        "ch.qos.logback" % "logback-classic" % "1.1.7"
+        "ch.qos.logback" % "logback-classic" % "1.1.7",
+        "org.webbitserver" % "webbit" % "0.4.15"
       )
     }.test
   }

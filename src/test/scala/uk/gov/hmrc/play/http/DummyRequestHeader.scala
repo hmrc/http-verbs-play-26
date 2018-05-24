@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,33 +16,23 @@
 
 package uk.gov.hmrc.play.http
 
-import java.security.cert.X509Certificate
-
+import play.api.libs.typedmap.TypedMap
+import play.api.mvc.request.{RemoteConnection, RequestTarget}
 import play.api.mvc.{Headers, RequestHeader}
 import play.api.test.FakeHeaders
 
 
 class DummyRequestHeader extends RequestHeader {
 
-  override def remoteAddress: String = ???
-
   override def headers: Headers = FakeHeaders(Seq.empty)
-
-  override def queryString: Map[String, Seq[String]] = ???
 
   override def version: String = ???
 
   override def method: String = "GET"
 
-  override def path: String = "/"
+  override def connection: RemoteConnection = ???
 
-  override def uri: String = "/"
+  override def target: RequestTarget = ???
 
-  override def tags: Map[String, String] = ???
-
-  override def id: Long = ???
-
-  override def secure: Boolean = false
-
-  override def clientCertificateChain: Option[Seq[X509Certificate]] = ???
+  override def attrs: TypedMap = ???
 }

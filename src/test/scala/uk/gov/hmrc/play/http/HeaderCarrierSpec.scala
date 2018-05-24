@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,11 @@
 package uk.gov.hmrc.play.http
 
 import org.scalatest.{Matchers, WordSpecLike}
-import play.api.mvc.{Action, Controller, Cookie, Session}
+import play.api.Configuration
+import play.api.inject.guice.GuiceApplicationBuilder
+import play.api.mvc._
 import play.api.test.Helpers._
-import play.api.test.{FakeApplication, FakeHeaders, FakeRequest}
+import play.api.test.{FakeHeaders, FakeRequest}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging._
 import uk.gov.hmrc.play.HeaderCarrierConverter
@@ -109,7 +111,8 @@ class HeaderCarrierSpec extends WordSpecLike with Matchers {
         HeaderCarrierConverter.fromHeadersAndSession(headers(HeaderNames.akamaiReputation -> "ID=127.0.0.1;WEBATCK=7"), Some(Session())).akamaiReputation shouldBe Some(AkamaiReputation("ID=127.0.0.1;WEBATCK=7"))
       }
 
-      "add all whitelisted remaining headers, ignoring explicit ones" in running(FakeApplication(additionalConfiguration = Map("httpHeadersWhitelist" -> Seq("quix")))) {
+      val application = GuiceApplicationBuilder(configuration = Configuration("httpHeadersWhitelist" -> Seq("quix"))).build()
+      "add all whitelisted remaining headers, ignoring explicit ones" in running(application) {
         HeaderCarrierConverter.fromHeadersAndSession(headers(
           HeaderNames.xRequestId -> "18476239874162",
           "User-Agent" -> "quix",
@@ -130,15 +133,12 @@ class HeaderCarrierSpec extends WordSpecLike with Matchers {
 
   "utilise values from cookies" should {
 
-    object TestController extends Controller {
-      def index = Action { req =>
-        HeaderCarrierConverter.fromHeadersAndSession(req.headers, Some(req.session)).deviceID shouldBe Some("deviceIdCookie")
-        Ok("Test")
-      }
-    }
+    val application = GuiceApplicationBuilder().build()
+    "find the deviceID from the cookie" in running(application) {
+      val cookieHeader = Cookies.encodeCookieHeader(Seq(Cookie(CookieNames.deviceID, "deviceIdCookie")))
+      val req = FakeRequest().withHeaders(play.api.http.HeaderNames.COOKIE -> cookieHeader)
 
-    "find the deviceID from the cookie" in running(FakeApplication()) {
-      TestController.index(FakeRequest().withCookies(Cookie(CookieNames.deviceID, "deviceIdCookie")))
+      HeaderCarrierConverter.fromHeadersAndSession(req.headers, Some(req.session)).deviceID shouldBe Some("deviceIdCookie")
     }
 
     "find the deviceID from the headers if the cookie is not set such as in an internal microservice call" in {

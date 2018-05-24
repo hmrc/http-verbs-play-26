@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 HM Revenue & Customs
+ * Copyright 2018 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,24 +17,19 @@
 package uk.gov.hmrc.play.http.ws
 
 import com.typesafe.config.Config
-import play.api.{Configuration, Play}
+import play.api.Configuration
 import play.api.libs.ws
 import play.api.libs.ws.{DefaultWSProxyServer, WSClient, WSProxyServer}
 import uk.gov.hmrc.http.{HeaderCarrier, Request}
 
 trait WSRequest extends Request {
 
-  import play.api.libs.ws.WS
+  def configuration: Option[Config]
 
-  override lazy val configuration: Option[Config] = Play.maybeApplication.map(_.configuration.underlying)
-
-  def wsClient: WSClient = {
-    import play.api.Play.current
-    WS.client
-  }
+  def wsClient: WSClient
 
   def buildRequest[A](url: String)(implicit hc: HeaderCarrier): ws.WSRequest = {
-    wsClient.url(url).withHeaders(applicableHeaders(url)(hc): _*)
+    wsClient.url(url).withHttpHeaders(applicableHeaders(url)(hc): _*)
   }
 
 }
@@ -55,25 +50,18 @@ trait WSProxy extends WSRequest {
 object WSProxyConfiguration {
 
   def apply(configPrefix: String, configuration: Configuration): Option[WSProxyServer] = {
-    val proxyRequired = configuration.getBoolean(s"$configPrefix.proxyRequiredForThisEnvironment").getOrElse(true)
+    val proxyRequired = configuration.getOptional[Boolean](s"$configPrefix.proxyRequiredForThisEnvironment").getOrElse(true)
 
     if (proxyRequired) Some(parseProxyConfiguration(configPrefix, configuration)) else None
   }
 
-  def apply(configPrefix: String): Option[WSProxyServer] = {
-
-    import play.api.Play.current
-    apply(configPrefix, Play.configuration)
-
-  }
-
   private def parseProxyConfiguration(configPrefix: String, configuration: Configuration) = {
     DefaultWSProxyServer(
-      protocol = configuration.getString(s"$configPrefix.protocol").orElse(throw ProxyConfigurationException("protocol")),
-      host = configuration.getString(s"$configPrefix.host").getOrElse(throw ProxyConfigurationException("host")),
-      port = configuration.getInt(s"$configPrefix.port").getOrElse(throw ProxyConfigurationException("port")),
-      principal = configuration.getString(s"$configPrefix.username"),
-      password = configuration.getString(s"$configPrefix.password")
+      protocol = configuration.getOptional[String](s"$configPrefix.protocol").orElse(throw ProxyConfigurationException("protocol")),
+      host = configuration.getOptional[String](s"$configPrefix.host").getOrElse(throw ProxyConfigurationException("host")),
+      port = configuration.getOptional[Int](s"$configPrefix.port").getOrElse(throw ProxyConfigurationException("port")),
+      principal = configuration.getOptional[String](s"$configPrefix.username"),
+      password = configuration.getOptional[String](s"$configPrefix.password")
     )
   }
 
