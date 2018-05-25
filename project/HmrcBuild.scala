@@ -27,9 +27,8 @@ object HmrcBuild extends Build {
   lazy val microservice = Project(appName, file("."))
     .enablePlugins(SbtAutoBuildPlugin, SbtGitVersioning)
     .settings(
-      scalaVersion := "2.12.4",
+      scalaVersion := "2.11.12",
       libraryDependencies ++= AppDependencies(),
-      crossScalaVersions := Seq("2.12.4"),
       resolvers := Seq(
         Resolver.bintrayRepo("hmrc", "releases"),
         "typesafe-releases" at "http://repo.typesafe.com/typesafe/releases/"
@@ -46,8 +45,8 @@ private object AppDependencies {
   val compile = Seq(
     "com.typesafe.play" %% "play" % PlayVersion.current,
     ws,
-    "uk.gov.hmrc" %% "time" % "3.1.0-0-g0000000",
-    "uk.gov.hmrc" %% "http-core" % "0.6.0-1-gbbc583c"
+    "uk.gov.hmrc" %% "time" % "3.1.0",
+    "uk.gov.hmrc" %% "http-core" % "0.7.0"
   )
 
   trait TestDependencies {
@@ -61,8 +60,8 @@ private object AppDependencies {
         "com.typesafe.play" %% "play-test" %  PlayVersion.current % scope,
         "com.typesafe.play" %% "play-specs2" %  PlayVersion.current % scope,
         "commons-codec" % "commons-codec" % "1.7" % scope,
-        "org.scalatest" %% "scalatest" % "3.0.4" % scope,
-        "org.scalacheck" %% "scalacheck" % "1.12.6" % scope,
+        "org.scalatest" %% "scalatest" % "3.0.5" % scope,
+        "org.scalacheck" %% "scalacheck" % "1.14.0" % scope,
         "org.pegdown" % "pegdown" % "1.5.0" % scope,
         "com.github.tomakehurst" % "wiremock" % "1.52" % scope,
         "ch.qos.logback" % "logback-core" % "1.1.7",
