@@ -44,19 +44,6 @@ class MdcLoggingExecutionContextSpec
 
   "The MDC Transporting Execution Context" should {
 
-    //    "capture an MDC map using implicit from LoggingDetails" in withCaptureOfLoggingFrom[MdcLoggingExecutionContextSpec] {
-    //      logList =>
-    //
-    //        import MdcLoggingExecutionContext._
-    //
-    //        implicit val loggingDetails: LoggingDetails = HeaderCarrier().copy(requestId = Some("rid"))
-    //
-    //        //WIP Charles - find how to make this call without parameters.
-    //        logEventInsideAFutureUsingImplicitEc(fromLoggingDetails(loggingDetails))
-    //
-    //        logList.map(_._2).loneElement should contain(HeaderNames.xRequestId -> "rid")
-    //    }
-
     "capture the an MDC map with values in it and put it in place when a task is run" in withCaptureOfLoggingFrom[
       MdcLoggingExecutionContextSpec] { logList =>
       implicit val ec = createAndInitialiseMdcTransportingExecutionContext(Map("someKey" -> "something"))
