@@ -21,7 +21,6 @@ import play.api.mvc.request.{RemoteConnection, RequestTarget}
 import play.api.mvc.{Headers, RequestHeader}
 import play.api.test.FakeHeaders
 
-
 class DummyRequestHeader extends RequestHeader {
 
   override def headers: Headers = FakeHeaders(Seq.empty)

@@ -27,7 +27,7 @@ import play.api.test.WsTestClient
 import uk.gov.hmrc.http.HeaderCarrier
 
 class WsProxySpec extends WordSpecLike with Matchers with MockitoSugar with OptionValues with BeforeAndAfterAll {
-  implicit val hc = HeaderCarrier()
+  implicit val hc                  = HeaderCarrier()
   val fakeApplication: Application = GuiceApplicationBuilder().build()
   WsTestClient.withClient(client => {
 
@@ -38,7 +38,7 @@ class WsProxySpec extends WordSpecLike with Matchers with MockitoSugar with Opti
 
         object ProxiedGet extends WSProxy {
           val configuration = None
-          val wsClient = client
+          val wsClient      = client
 
           override def applicableHeaders(url: String)(implicit hc: HeaderCarrier): Seq[(String, String)] = Nil
 
@@ -56,7 +56,7 @@ class WsProxySpec extends WordSpecLike with Matchers with MockitoSugar with Opti
 
         object ProxiedGet extends WSProxy {
           val configuration = None
-          val wsClient = client
+          val wsClient      = client
 
           override def applicableHeaders(url: String)(implicit hc: HeaderCarrier): Seq[(String, String)] = Nil
 
@@ -80,13 +80,16 @@ class WsProxySpec extends WordSpecLike with Matchers with MockitoSugar with Opti
     def fullResourceUrl = s"$endpointBaseUrl$resourcePath"
 
     def setupEndpointExpectations() {
-      endpointMock.register(get(urlEqualTo(resourcePath))
-        .willReturn(aResponse()
-        .withHeader("Content-Type", "text/plain")
-        .withBody(responseData)))
+      endpointMock.register(
+        get(urlEqualTo(resourcePath))
+          .willReturn(
+            aResponse()
+              .withHeader("Content-Type", "text/plain")
+              .withBody(responseData)))
 
-      proxyMock.register(get(urlMatching(resourcePath))
-        .willReturn(aResponse().proxiedFrom(endpointBaseUrl)))
+      proxyMock.register(
+        get(urlMatching(resourcePath))
+          .willReturn(aResponse().proxiedFrom(endpointBaseUrl)))
     }
 
     def assertEndpointWasCalled() {

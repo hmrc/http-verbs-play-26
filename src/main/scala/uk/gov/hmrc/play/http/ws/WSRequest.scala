@@ -28,43 +28,44 @@ trait WSRequest extends Request {
 
   def wsClient: WSClient
 
-  def buildRequest[A](url: String)(implicit hc: HeaderCarrier): ws.WSRequest = {
+  def buildRequest[A](url: String)(implicit hc: HeaderCarrier): ws.WSRequest =
     wsClient.url(url).withHttpHeaders(applicableHeaders(url)(hc): _*)
-  }
 
 }
-
 
 trait WSProxy extends WSRequest {
 
   def wsProxyServer: Option[WSProxyServer]
 
-  override def buildRequest[A](url: String)(implicit hc: HeaderCarrier): ws.WSRequest = {
+  override def buildRequest[A](url: String)(implicit hc: HeaderCarrier): ws.WSRequest =
     wsProxyServer match {
       case Some(proxy) => super.buildRequest(url).withProxyServer(proxy)
-      case None => super.buildRequest(url)
+      case None        => super.buildRequest(url)
     }
-  }
 }
 
 object WSProxyConfiguration {
 
   def apply(configPrefix: String, configuration: Configuration): Option[WSProxyServer] = {
-    val proxyRequired = configuration.getOptional[Boolean](s"$configPrefix.proxyRequiredForThisEnvironment").getOrElse(true)
+    val proxyRequired =
+      configuration.getOptional[Boolean](s"$configPrefix.proxyRequiredForThisEnvironment").getOrElse(true)
 
     if (proxyRequired) Some(parseProxyConfiguration(configPrefix, configuration)) else None
   }
 
-  private def parseProxyConfiguration(configPrefix: String, configuration: Configuration) = {
+  private def parseProxyConfiguration(configPrefix: String, configuration: Configuration) =
     DefaultWSProxyServer(
-      protocol = configuration.getOptional[String](s"$configPrefix.protocol").orElse(throw ProxyConfigurationException("protocol")),
-      host = configuration.getOptional[String](s"$configPrefix.host").getOrElse(throw ProxyConfigurationException("host")),
-      port = configuration.getOptional[Int](s"$configPrefix.port").getOrElse(throw ProxyConfigurationException("port")),
+      protocol = configuration
+        .getOptional[String](s"$configPrefix.protocol")
+        .orElse(throw ProxyConfigurationException("protocol")),
+      host =
+        configuration.getOptional[String](s"$configPrefix.host").getOrElse(throw ProxyConfigurationException("host")),
+      port      = configuration.getOptional[Int](s"$configPrefix.port").getOrElse(throw ProxyConfigurationException("port")),
       principal = configuration.getOptional[String](s"$configPrefix.username"),
-      password = configuration.getOptional[String](s"$configPrefix.password")
+      password  = configuration.getOptional[String](s"$configPrefix.password")
     )
-  }
 
-  case class ProxyConfigurationException(key: String) extends RuntimeException(s"Missing proxy configuration - key '$key' not found")
+  case class ProxyConfigurationException(key: String)
+      extends RuntimeException(s"Missing proxy configuration - key '$key' not found")
 
 }

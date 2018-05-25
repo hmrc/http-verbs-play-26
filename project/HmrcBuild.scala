@@ -45,30 +45,31 @@ private object AppDependencies {
   val compile = Seq(
     "com.typesafe.play" %% "play" % PlayVersion.current,
     ws,
-    "uk.gov.hmrc" %% "time" % "3.1.0",
+    "uk.gov.hmrc" %% "time"      % "3.1.0",
     "uk.gov.hmrc" %% "http-core" % "0.7.0"
   )
 
   trait TestDependencies {
-    lazy val scope: String = "test"
+    lazy val scope: String       = "test"
     lazy val test: Seq[ModuleID] = ???
   }
 
   object Test {
-    def apply() = new TestDependencies {
-      override lazy val test = Seq(
-        "com.typesafe.play" %% "play-test" %  PlayVersion.current % scope,
-        "com.typesafe.play" %% "play-specs2" %  PlayVersion.current % scope,
-        "commons-codec" % "commons-codec" % "1.7" % scope,
-        "org.scalatest" %% "scalatest" % "3.0.5" % scope,
-        "org.scalacheck" %% "scalacheck" % "1.14.0" % scope,
-        "org.pegdown" % "pegdown" % "1.5.0" % scope,
-        "com.github.tomakehurst" % "wiremock" % "1.52" % scope,
-        "ch.qos.logback" % "logback-core" % "1.1.7",
-        "ch.qos.logback" % "logback-classic" % "1.1.7",
-        "org.webbitserver" % "webbit" % "0.4.15"
-      )
-    }.test
+    def apply() =
+      new TestDependencies {
+        override lazy val test = Seq(
+          "com.typesafe.play"      %% "play-test"      % PlayVersion.current % scope,
+          "com.typesafe.play"      %% "play-specs2"    % PlayVersion.current % scope,
+          "commons-codec"          % "commons-codec"   % "1.7" % scope,
+          "org.scalatest"          %% "scalatest"      % "3.0.5" % scope,
+          "org.scalacheck"         %% "scalacheck"     % "1.14.0" % scope,
+          "org.pegdown"            % "pegdown"         % "1.5.0" % scope,
+          "com.github.tomakehurst" % "wiremock"        % "1.52" % scope,
+          "ch.qos.logback"         % "logback-core"    % "1.1.7",
+          "ch.qos.logback"         % "logback-classic" % "1.1.7",
+          "org.webbitserver"       % "webbit"          % "0.4.15"
+        )
+      }.test
   }
 
   def apply() = compile ++ Test()

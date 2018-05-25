@@ -35,7 +35,8 @@ import scala.concurrent.ExecutionContext.global
 
 class HttpTimeoutSpec extends WordSpecLike with Matchers with ScalaFutures with BeforeAndAfterAll {
 
-  lazy val fakeApplication = GuiceApplicationBuilder(configuration = Configuration("play.ws.timeout.request" -> "1000ms")).build()
+  lazy val fakeApplication =
+    GuiceApplicationBuilder(configuration = Configuration("play.ws.timeout.request" -> "1000ms")).build()
 
   override def beforeAll() {
     super.beforeAll()
@@ -54,17 +55,19 @@ class HttpTimeoutSpec extends WordSpecLike with Matchers with ScalaFutures with 
       "be gracefully timeout when no response is received within the 'timeout' frame" in {
         val http = new WSHttp with TestHttpCore {
           override val configuration = Some(fakeApplication.configuration.underlying)
-          override val wsClient = fakeApplication.injector.instanceOf[WSClient]
+          override val wsClient      = fakeApplication.injector.instanceOf[WSClient]
         }
 
         // get an unused port
         val ss = new ServerSocket(0)
         ss.close()
         val publicUri = URI.create(s"http://localhost:${ss.getLocalPort}")
-        val ws = new NettyWebServer(global, ss.getLocalSocketAddress, publicUri)
+        val ws        = new NettyWebServer(global, ss.getLocalSocketAddress, publicUri)
         try {
           //starts web server
-          ws.add("/test", new DelayedHttpHandler(global, 2000, new StringHttpHandler("application/json", "{name:'pong'}")))
+          ws.add(
+            "/test",
+            new DelayedHttpHandler(global, 2000, new StringHttpHandler("application/json", "{name:'pong'}")))
           ws.start().get()
 
           implicit val hc = HeaderCarrier()
