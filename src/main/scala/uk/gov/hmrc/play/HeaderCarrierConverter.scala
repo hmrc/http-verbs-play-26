@@ -16,32 +16,33 @@
 
 package uk.gov.hmrc.play
 
-import play.api.Play
+import com.typesafe.config.ConfigFactory
+import play.api.Configuration
 import play.api.mvc.{Cookies, Headers, Session}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging._
 
 import scala.util.Try
 
-object HeaderCarrierConverter {
+object HeaderCarrierConverter extends HeaderCarrierConverter {
+  protected val configuration: Configuration = Configuration(ConfigFactory.load())
+}
 
-  def fromHeadersAndSession(headers: Headers, session: Option[Session] = None) = {
-    lazy val cookies: Cookies = Cookies.fromCookieHeader(headers.get(play.api.http.HeaderNames.COOKIE))
+trait HeaderCarrierConverter {
+
+  def fromHeadersAndSession(headers: Headers, session: Option[Session] = None): HeaderCarrier =
     session.fold(fromHeaders(headers)) {
+      val cookies = Cookies.fromCookieHeader(headers.get(play.api.http.HeaderNames.COOKIE))
       fromSession(headers, cookies, _)
     }
-  }
 
-  def whitelistedHeaders: Seq[String] =
-    Play.maybeApplication.flatMap(_.configuration.getStringSeq("httpHeadersWhitelist")).getOrElse(Seq())
-
-  def buildRequestChain(currentChain: Option[String]): RequestChain =
+  private def buildRequestChain(currentChain: Option[String]): RequestChain =
     currentChain match {
       case None        => RequestChain.init
       case Some(chain) => RequestChain(chain).extend
     }
 
-  def requestTimestamp(headers: Headers): Long =
+  private def requestTimestamp(headers: Headers): Long =
     headers
       .get(HeaderNames.xRequestTimestamp)
       .flatMap(tsAsString => Try(tsAsString.toLong).toOption)
@@ -98,6 +99,11 @@ object HeaderCarrierConverter {
       headers.keys.filterNot(HeaderNames.explicitlyIncludedHeaders.contains(_)).filter(whitelistedHeaders.contains(_))
     remaining.map(h => h -> headers.get(h).getOrElse("")).toSeq
   }
+
+  private def whitelistedHeaders: Seq[String] =
+    configuration.getOptional[Seq[String]]("httpHeadersWhitelist").getOrElse(Seq())
+
+  protected def configuration: Configuration
 
   private def forwardedFor(headers: Headers): Option[ForwardedFor] =
     ((headers.get(HeaderNames.trueClientIp), headers.get(HeaderNames.xForwardedFor)) match {

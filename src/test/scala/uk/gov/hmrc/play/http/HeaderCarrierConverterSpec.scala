@@ -28,7 +28,7 @@ import uk.gov.hmrc.play.HeaderCarrierConverter
 
 import scala.concurrent.duration._
 
-class HeaderCarrierSpec extends WordSpecLike with Matchers {
+class HeaderCarrierConverterSpec extends WordSpecLike with Matchers {
 
   "Extracting the request timestamp from the session and headers" should {
     "find it in the header if present and a valid Long" in {
@@ -153,14 +153,24 @@ class HeaderCarrierSpec extends WordSpecLike with Matchers {
         .akamaiReputation shouldBe Some(AkamaiReputation("ID=127.0.0.1;WEBATCK=7"))
     }
 
-    val application =
-      GuiceApplicationBuilder(configuration = Configuration("httpHeadersWhitelist" -> Seq("quix"))).build()
-    "add all whitelisted remaining headers, ignoring explicit ones" in running(application) {
-      HeaderCarrierConverter
+    "add all whitelisted remaining headers, ignoring explicit ones" in {
+      val headerCarrierConverter = new HeaderCarrierConverter {
+        protected def configuration: Configuration = Configuration("httpHeadersWhitelist" -> Seq("quix"))
+      }
+
+      headerCarrierConverter
         .fromHeadersAndSession(
-          headers(HeaderNames.xRequestId -> "18476239874162", "User-Agent" -> "quix", "quix" -> "foo"),
-          Some(Session()))
+          headers(HeaderNames.xRequestId -> "18476239874162", "User-Agent" -> "quix", "quix" -> "foo")
+        )
         .otherHeaders shouldBe Seq("quix" -> "foo")
+    }
+
+    "work if httpHeadersWhitelist not provided in config" in {
+      val headerCarrierConverter = new HeaderCarrierConverter {
+        protected def configuration: Configuration = Configuration.empty
+      }
+
+      headerCarrierConverter.fromHeadersAndSession(headers()).otherHeaders shouldBe Seq()
     }
 
   }
@@ -178,8 +188,7 @@ class HeaderCarrierSpec extends WordSpecLike with Matchers {
 
   "utilise values from cookies" should {
 
-    val application = GuiceApplicationBuilder().build()
-    "find the deviceID from the cookie" in running(application) {
+    "find the deviceID from the cookie" in {
       val cookieHeader = Cookies.encodeCookieHeader(Seq(Cookie(CookieNames.deviceID, "deviceIdCookie")))
       val req          = FakeRequest().withHeaders(play.api.http.HeaderNames.COOKIE -> cookieHeader)
 
