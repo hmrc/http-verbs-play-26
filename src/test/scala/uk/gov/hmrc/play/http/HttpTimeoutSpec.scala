@@ -54,8 +54,7 @@ class HttpTimeoutSpec extends WordSpecLike with Matchers with ScalaFutures with 
 
       "be gracefully timeout when no response is received within the 'timeout' frame" in {
         val http = new WSHttp with TestHttpCore {
-          override val configuration = Some(fakeApplication.configuration.underlying)
-          override val wsClient      = fakeApplication.injector.instanceOf[WSClient]
+          override val wsClient = fakeApplication.injector.instanceOf[WSClient]
         }
 
         // get an unused port
