@@ -165,6 +165,18 @@ class HeaderCarrierConverterSpec extends WordSpecLike with Matchers {
         .otherHeaders shouldBe Seq("quix" -> "foo")
     }
 
+    "whitelisted headers check should be case insensitive" in {
+      val headerCarrierConverter = new HeaderCarrierConverter {
+        protected def configuration: Configuration = Configuration("httpHeadersWhitelist" -> Seq("x-client-id"))
+      }
+
+      headerCarrierConverter
+        .fromHeadersAndSession(
+          headers(HeaderNames.xRequestId -> "18476239874162", "User-Agent" -> "quix", "X-Client-ID" -> "foo")
+        )
+        .otherHeaders shouldBe Seq("X-Client-ID" -> "foo")
+    }
+
     "work if httpHeadersWhitelist not provided in config" in {
       val headerCarrierConverter = new HeaderCarrierConverter {
         protected def configuration: Configuration = Configuration.empty
