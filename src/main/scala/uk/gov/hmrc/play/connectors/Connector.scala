@@ -18,12 +18,21 @@ package uk.gov.hmrc.play.connectors
 
 import play.api.libs.ws.{WSClient, WSRequest}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.play.HeaderCarrierConverter
 
 trait RequestBuilder {
   def buildRequest(url: String)(implicit hc: HeaderCarrier): WSRequest
 }
 
+object RequestBuilder {
+  def headers(hc: HeaderCarrier): Seq[(String, String)] =
+    hc.headers.filter {
+      case (name, value) => name != HeaderCarrierConverter.Path
+    }
+}
+
 trait WSClientRequestBuilder extends RequestBuilder {
   def client: WSClient
-  def buildRequest(url: String)(implicit hc: HeaderCarrier): WSRequest = client.url(url).withHeaders(hc.headers: _*)
+  def buildRequest(url: String)(implicit hc: HeaderCarrier): WSRequest =
+    client.url(url).withHttpHeaders(RequestBuilder.headers(hc): _*)
 }

@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.play.connectors
 
-import org.scalatest.mock.MockitoSugar
+import org.scalatest.mockito.MockitoSugar
 import org.scalatest.{Matchers, WordSpecLike}
-import play.api.libs.ws.WSClient
 import play.api.test.WsTestClient
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.logging.{Authorization, ForwardedFor, RequestId, SessionId}
@@ -45,7 +44,8 @@ class ConnectorSpec extends WordSpecLike with Matchers with MockitoSugar {
           forwarded     = Some(forwarded),
           sessionId     = Some(sessionId),
           requestId     = Some(requestId),
-          deviceID      = Some(deviceID)
+          deviceID      = Some(deviceID),
+          otherHeaders  = Seq("path" -> "/the/request/path")
         )
 
         val request = builder.buildRequest("http://auth.base")(carrier)
@@ -55,6 +55,7 @@ class ConnectorSpec extends WordSpecLike with Matchers with MockitoSugar {
         request.headers.get(HeaderNames.xSessionId).flatMap(_.headOption)    shouldBe Some(sessionId.value)
         request.headers.get(HeaderNames.xRequestId).flatMap(_.headOption)    shouldBe Some(requestId.value)
         request.headers.get(HeaderNames.deviceID).flatMap(_.headOption)      shouldBe Some(deviceID)
+        request.headers.get("path")                                          shouldBe None
       }
     }
   })

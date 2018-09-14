@@ -177,6 +177,15 @@ class HeaderCarrierConverterSpec extends WordSpecLike with Matchers {
         .otherHeaders shouldBe Seq("X-Client-ID" -> "foo")
     }
 
+    "add the request path" in {
+      HeaderCarrierConverter
+        .fromHeadersAndSessionAndRequest(
+          headers(),
+          request = Some(FakeRequest(GET, path = "/the/request/path"))
+        )
+        .otherHeaders shouldBe Seq("path" -> "/the/request/path")
+    }
+
     "work if httpHeadersWhitelist not provided in config" in {
       val headerCarrierConverter = new HeaderCarrierConverter {
         protected def configuration: Configuration = Configuration.empty
